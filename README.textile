@@ -1,0 +1,3 @@
+h1. schroedinger-extractor
+
+Extract a/bvids from shuukan bilibili ranking videos.
