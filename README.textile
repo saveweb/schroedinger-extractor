@@ -1,3 +1,21 @@
 h1. schroedinger-extractor
 
-Extract a/bvids from shuukan bilibili ranking videos.
+Extract a/bvids from shuukan bilibili ranking videos. (Windows only)
+
+从周刊哔哩哔哩排行榜视频中提取 av/bv 号。
+
+h2. 安装
+
+下载 "PaddleOCR-JSON":https://github.com/hiroi-sora/PaddleOCR-json 并解压，修改代码中可执行文件的路径。
+
+下载周刊哔哩哔哩排行榜视频并修改视频路径。
+
+bc. scoop install rustup ffmpeg
+rustup install stable
+rustup default stable
+cd schroedinger-extractor
+cargo run
+
+h2. 已知问题
+
+注意 BVID 中的 @1@, @I@, @l@ 会识别混，需要校对/把可能的 BVID 都下载一遍。
