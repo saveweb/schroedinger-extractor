@@ -16,6 +16,3 @@ rustup default stable
 cd schroedinger-extractor
 cargo run
 
-h2. 已知问题
-
-注意 BVID 中的 @1@, @I@, @l@ 会识别混，需要校对/把可能的 BVID 都下载一遍。

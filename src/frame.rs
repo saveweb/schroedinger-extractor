@@ -49,7 +49,8 @@ impl ShuukanFrame {
                 .or_else(|e| Err(e.to_string()))?
                 .to_str()
                 .unwrap(),
-        ).and_then(|x| Ok(x.into()))
+        )
+        .and_then(|x| Ok(x.into()))
     }
 
     fn find_vid(ocr_result: &[ContentData]) -> Result<Vid, String> {
@@ -66,7 +67,14 @@ impl ShuukanFrame {
                             .ok()?,
                     ))
                 } else if lower.starts_with("bv") {
-                    Some(Vid::Bvid(x.text[2..].to_string()))
+                    Some(Vid::Bvid(
+                        x.text[2..]
+                            .to_string() // Base58 不使用
+                            .replace("0", "o") // 数字"0"，
+                            .replace("O", "o") // 字母大写"O"，
+                            .replace("l", "1") // 和字母小写"l"
+                            .replace("I", "1"), // 字母大写"I"，
+                    ))
                 } else {
                     None
                 }
@@ -97,7 +105,8 @@ impl ShuukanFrame {
             })
             .next()
             .ok_or("No title found, maybe bangumi")?
-            .text.clone())
+            .text
+            .clone())
     }
 
     pub fn get_info(&self) -> Result<ShuukanVideoInfo, String> {
