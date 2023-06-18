@@ -47,6 +47,7 @@ impl ShuukanVideo {
     ) -> Result<ShuukanFrame, String> {
         let image = image.unwrap_or_else(|| {
             let mut image = PathBuf::from("./images/");
+            let _ = std::fs::create_dir_all(&image);
             image.push(format!("frame-{}.jpg", time.as_secs()));
             image
         });

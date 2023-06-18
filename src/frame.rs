@@ -1,38 +1,32 @@
 use chrono::NaiveDate;
 use paddleocr::ContentData;
-use std::fmt::{Display, Result as FmtResult};
+use std::fmt::Display;
 use std::fs::canonicalize;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::ocr::ocr::ocr_and_parse;
+use crate::bili::{try_into_vid, Vid};
+use crate::ocr::ocr_and_parse;
 
 pub struct ShuukanFrame {
     pub path: PathBuf,
     pub time: Duration,
 }
 
-#[derive(Debug)]
-pub enum Vid {
-    Avid(usize),
-    Bvid(String),
-}
-
-impl Display for Vid {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> FmtResult {
-        match self {
-            Vid::Avid(avid) => f.write_fmt(format_args!("av{}", avid)),
-            Vid::Bvid(bvid) => f.write_fmt(format_args!("bv{}", bvid)),
-        }
-    }
-}
-
-#[derive(Debug)]
 pub struct ShuukanVideoInfo {
     pub vid: Vid,
     pub title: String,
     pub time: String,
+}
+
+impl Display for ShuukanVideoInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!(
+            "[{}] {} ({})",
+            self.vid, self.title, self.time
+        ))
+    }
 }
 
 impl ShuukanFrame {
@@ -58,26 +52,7 @@ impl ShuukanFrame {
             .iter()
             .filter_map(|x| {
                 // lower x starts with av or bv
-                let lower = x.text.to_lowercase();
-                if lower.starts_with("av") {
-                    Some(Vid::Avid(
-                        lower[2..]
-                            .parse::<usize>()
-                            .map_err(|e| e.to_string())
-                            .ok()?,
-                    ))
-                } else if lower.starts_with("bv") {
-                    Some(Vid::Bvid(
-                        x.text[2..]
-                            .to_string() // Base58 不使用
-                            .replace("0", "o") // 数字"0"，
-                            .replace("O", "o") // 字母大写"O"，
-                            .replace("l", "1") // 和字母小写"l"
-                            .replace("I", "1"), // 字母大写"I"，
-                    ))
-                } else {
-                    None
-                }
+                try_into_vid(&x.text)
             })
             .next()
             .ok_or("No vid found".into())
@@ -109,14 +84,17 @@ impl ShuukanFrame {
             .clone())
     }
 
-    pub fn get_info(&self) -> Result<ShuukanVideoInfo, String> {
-        let ocr_result = self.ocr()?;
-        let is_single_video = ocr_result
+    pub fn detect_is_single_video(ocr_result: &[ContentData]) -> bool {
+        ocr_result
             .iter()
             .filter(|x| x.text.contains("投稿"))
             .next()
-            .is_none();
-        if is_single_video {
+            .is_none()
+    }
+
+    pub fn get_info(&self) -> Result<ShuukanVideoInfo, String> {
+        let ocr_result = self.ocr()?;
+        if Self::detect_is_single_video(&ocr_result) {
             print!("<不是单个视频> ")
         }
         let vid = Self::find_vid(&ocr_result)?;
