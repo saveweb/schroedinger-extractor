@@ -24,14 +24,27 @@ fn process_video(video: PathBuf) {
     // let frame = video
     //     .get_frame(Duration::from_secs(302), Some(frame_output_file))
     //     .unwrap();
+
+    let mut prev_vid = None;
+    let mut vids = Vec::new();
     for i in (开头时长..video.duration.as_secs() - 片尾时长).step_by(识别间隔) {
         let frame = video.get_frame(Duration::from_secs(i), None).unwrap();
         print!("第 {} 秒：", i);
         let now = std::time::Instant::now();
         match frame.get_info() {
-            Ok(info) => print!("{}", info),
+            Ok(info) => {
+                print!("{}", info);
+                if let Some(prev_vid) = prev_vid {
+                    if prev_vid != info.vid {
+                        vids.push(prev_vid);
+                    }
+                }
+                prev_vid = Some(info.vid);
+            }
             Err(e) => print!("未识别到信息，因为 {}", e),
         }
         println!("，耗时 {:?}", now.elapsed());
     }
+    vids.push(prev_vid.unwrap());
+    println!("vids: {:?}", vids);
 }

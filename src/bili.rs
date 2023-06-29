@@ -1,6 +1,6 @@
 use std::fmt::{Display, Result as FmtResult};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Vid {
     Avid(usize),
     Bvid(String),
@@ -15,25 +15,24 @@ impl Display for Vid {
     }
 }
 
-pub fn try_into_vid(s: &str) -> Option<Vid> {
-    let lower = s.to_lowercase();
-    if lower.starts_with("av") {
-        Some(Vid::Avid(
-            lower[2..]
-                .parse::<usize>()
-                // .map_err(|e| e.to_string())
-                .ok()?,
-        ))
-    } else if lower.starts_with("bv") {
-        Some(Vid::Bvid(
-            s[2..]
-                .to_string() // Base58 不使用
-                .replace("0", "o") // 数字"0"，
-                .replace("O", "o") // 字母大写"O"，
-                .replace("l", "1") // 和字母小写"l"
-                .replace("I", "1"), // 字母大写"I"，
-        ))
-    } else {
-        None
+impl TryFrom<String> for Vid {
+    type Error = ();
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        let lower = s.to_lowercase();
+        if lower.starts_with("av") {
+            Ok(Vid::Avid(lower[2..].parse::<usize>().map_err(|_| ())?))
+        } else if lower.starts_with("bv") {
+            Ok(Vid::Bvid(
+                s[2..]
+                    .to_string() // Base58 不使用
+                    .replace("0", "o") // 数字"0"，
+                    .replace("O", "o") // 字母大写"O"，
+                    .replace("l", "1") // 和字母小写"l"
+                    .replace("I", "1"), // 字母大写"I"，
+            ))
+        } else {
+            Err(())
+        }
     }
 }

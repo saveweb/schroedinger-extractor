@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::bili::{try_into_vid, Vid};
+use crate::bili::Vid;
 use crate::ocr::ocr_and_parse;
 
 pub struct ShuukanFrame {
@@ -50,22 +50,17 @@ impl ShuukanFrame {
     fn find_vid(ocr_result: &[ContentData]) -> Result<Vid, String> {
         ocr_result
             .iter()
-            .filter_map(|x| {
-                // lower x starts with av or bv
-                try_into_vid(&x.text)
-            })
-            .next()
+            .find_map(|x| x.text.clone().try_into().ok())
             .ok_or("No vid found".into())
     }
 
     fn find_time(ocr_result: &[ContentData]) -> Result<NaiveDate, String> {
         ocr_result
             .iter()
-            .filter_map(|x| {
+            .find_map(|x| {
                 // yyyy-mm-dd hh:mm
                 NaiveDate::parse_from_str(&x.text, "%Y-%m-%d %H:%M").ok()
             })
-            .next()
             .ok_or("No time found".into())
     }
 
